@@ -8,15 +8,12 @@ from rest_framework.status import HTTP_200_OK
 from rest_framework.test import APITestCase, APIClient, APITransactionTestCase
 
 from core.utils.logging import getLogger
-from ethwallet import celery_app
-from ethwallet.tests.mixins.address import AddressMixin
-from ethwallet.tests.mixins.notification import NotificationMockMixin
-from ethwallet.tests.mixins.rpcclient import RPCClientMockMixin
+from poloniexbot import celery_app
 
 logger = getLogger(__name__)
 
 
-class EthWalletTestMixin():
+class PoloniexBotTestMixin():
     def get_first(self, response):
         self.assertEqual(response.status_code, HTTP_200_OK)
 
@@ -31,9 +28,8 @@ class EthWalletTestMixin():
         input("To continue press some button:")
 
 
-class EthWalletLiveTest(APITransactionTestCase,
-                        AddressMixin,
-                        EthWalletTestMixin):
+class PoloniexBotLiveTest(APITransactionTestCase,
+                          PoloniexBotTestMixin):
     def setUp(self):
         super().setUp()
 
@@ -77,11 +73,8 @@ class EthWalletLiveTest(APITransactionTestCase,
 
 @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
                    CELERY_ALWAYS_EAGER=True)
-class EthWalletUnitTest(APITestCase,
-                        EthWalletTestMixin,
-                        AddressMixin,
-                        RPCClientMockMixin,
-                        NotificationMockMixin):
+class PoloniexBotUnitTest(APITestCase,
+                          PoloniexBotTestMixin):
     def setUp(self):
         super().setUp()
         self.mock_rpcclient()
