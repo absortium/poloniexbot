@@ -16,3 +16,14 @@ POLONIEX_ORDER_REMOVED = "orderBookRemove"
 
 CURRENCY_PAIR = "BTC_ETH"
 COUNT = 20
+
+# lower number - higher priority
+PRIORITY_DELETE = 0
+PRIORITY_DECREASE = 0
+PRIORITY_INCREASE = 1
+PRIORITY_CREATE = 1
+
+ACTION_DELETE = 'delete'
+ACTION_DECREASE = 'decrease'
+ACTION_INCREASE = 'increase'
+ACTION_CREATE = 'create'
