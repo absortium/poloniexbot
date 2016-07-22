@@ -1,8 +1,12 @@
 from decimal import Decimal as D
 
+from django.db import IntegrityError
+
 from absortium.error import LockFailureError, NotEnoughMoneyError
 from absortium.error import ValidationError
 from poloniexbot import constants
+from poloniexbot.celery import tasks
+from poloniexbot.models import Redirect
 
 __author__ = 'andrew.shvv@gmail.com'
 
@@ -209,3 +213,18 @@ def get_to_currency(order_type, pair):
         return pair.split('_')[1]
     else:
         return pair.split('_')[0]
+
+
+def create_poloniex_orders(absortium_orders):
+    orders = [order for order in absortium_orders if order['status'] == 'approving']
+
+    for order in orders:
+        try:
+            redirect = Redirect(absortium_order_pk=order['pk'])
+            redirect.save()
+            tasks.process_redirect(redirect_pk=redirect.pk)
+        except IntegrityError:
+            """
+                Redirect was somehow created before or simultaneously in another thread.
+            """
+        pass
