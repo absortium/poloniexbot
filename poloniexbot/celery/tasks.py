@@ -42,8 +42,10 @@ def process_redirect(self, **kwargs):
         poloniex_api = SyncApp(api_key=settings.API_KEY,
                                api_sec=settings.API_SECRET)
 
-        redirect = Redirect.objects.get(pk=kwargs["redirect_pk"])
+        redirect = Redirect.lock(pk=kwargs["redirect_pk"])
         order = absortium_api.orders.retrieve(pk=redirect.absortium_order_pk)
+
+        # TODO: Check that order is not canceled.
 
         if redirect.status == constants.REDIRECT_INIT:
             with transaction.atomic():
@@ -63,7 +65,6 @@ def process_redirect(self, **kwargs):
         if redirect.status == constants.REDIRECT_APPROVING:
             with transaction.atomic():
                 # TODO: If exception ApproveFailed was raised than it means that this order was abandoned (canceled) by user in Absortium system.
-
                 order = absortium_api.orders.approve(pk=redirect.absortium_order_pk)
                 redirect.status = constants.REDIRECT_TRANSMISSION
                 redirect.save()
@@ -112,13 +113,13 @@ def transmit_money(self, currency, amount, system, redirect_id):
 
             if system == constants.SYSTEM_ABSORTIUM:
                 absortium_api = Client(api_key=settings.ABSORTIUM_API_KEY,
-                                api_secret=settings.ABSORTIUM_API_SECRET,
-                                base_api_uri=constants.BACKEND_URL)
+                                       api_secret=settings.ABSORTIUM_API_SECRET,
+                                       base_api_uri=constants.BACKEND_URL)
                 absortium_api.withdrawals.create(amount=amount, address=settings.ADDRESS_POLONIEX, currency=currency)
 
             elif system == constants.SYSTEM_POLONIEX:
                 poloniex_api = SyncApp(api_key=settings.API_KEY,
-                                 api_sec=settings.API_SECRET)
+                                       api_sec=settings.API_SECRET)
                 poloniex_api.trading.witdrawal(amount=amount, address=settings.ADDRESS_ABSORTIUM, currency=currency)
 
             t = Transmission(amount=amount, currency=currency, system=system, redirect_id=redirect_id)

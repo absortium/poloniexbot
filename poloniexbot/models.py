@@ -19,6 +19,9 @@ class Redirect(models.Model):
     celery_task_id = models.IntegerField()
     created = models.DateTimeField(auto_now_add=True)
 
+    @staticmethod
+    def lock(**kwargs):
+        return Redirect.objects.select_for_update().get(**kwargs)
 
 class Transmission(models.Model):
     currency = models.CharField(max_length=calculate_len(constants.AVAILABLE_CURRENCIES))
