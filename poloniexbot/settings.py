@@ -11,34 +11,24 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
 import os
-import sys
 
 from kombu import Queue, Exchange
 
-docker_environments = {
-    'SECRET_KEY': 'DJANGO_SECRET_KEY',
-    'WHOAMI': 'WHOAMI',
-    'POSTGRES_PASSWORD': 'POSTGRES_PASSWORD',
+from core.utils.general import load_environments, get_attr_from_module
 
-    'POLONIEX_API_SECRET': 'POLONIEX_API_SECRET',
-    'POLONIEX_API_KEY': 'POLONIEX_API_KEY',
-
-    'ABSORTIUM_API_SECRET': 'ABSORTIUM_API_SECRET',
-    'ABSORTIUM_API_KEY': 'ABSORTIUM_API_KEY',
-
-    'CELERY_TEST': 'CELERY_TEST',
-    'MODE': 'MODE'
-}
-
-settings_module = sys.modules[__name__]
-for name, env_name in docker_environments.items():
-    value = os.environ[env_name] if env_name in os.environ else None
-    setattr(settings_module, name, value)
+load_environments(__name__, [
+    ('SECRET_KEY', 'DJANGO_SECRET_KEY', True),
+    ('POSTGRES_PASSWORD', 'POSTGRES_PASSWORD', True),
+    ('WHOAMI', 'WHOAMI'),
+    ('ADDRESS_POLONIEX', 'ADDRESS_POLONIEX'),
+    ('ADDRESS_ABSORTIUM', 'ADDRESS_ABSORTIUM'),
+    ('MODE', 'MODE'),
+])
 
 CELERY_BROKER = 'amqp://guest@docker.celery.broker//'
 CELERY_RESULT_BACKEND = 'redis://docker.celery.backend'
 
-MODE = getattr(settings_module, 'MODE')
+MODE = get_attr_from_module(__name__, 'MODE')
 
 ROUTER_URL = "http://docker.router:8080/publish"
 
@@ -88,7 +78,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': dbname,
         'USER': 'postgres',
-        'PASSWORD': getattr(settings_module, 'POSTGRES_PASSWORD'),
+        'PASSWORD': get_attr_from_module(__name__, 'POSTGRES_PASSWORD'),
         'HOST': 'docker.postgres',
         'PORT': '5432',
         'CONN_MAX_AGE': 500
